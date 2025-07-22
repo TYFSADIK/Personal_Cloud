@@ -1,5 +1,6 @@
 # Personal_Cloud
 I don't wanna waste my money to buy some subcription for my photos and videos and documents. Like I don't wanna use any googles or icloud things. I am serious about my privacy so I make my own cloud which I can access anywhere in the world and it is super fast and actual size. 
+
 # 🚀 Nextcloud Docker Setup
 
 A production-ready, portable, and easy-to-deploy **Nextcloud** environment using Docker and Docker Compose.
@@ -44,7 +45,7 @@ nextcloud-docker/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/nextcloud-docker.git
+git clone https://github.com/tyfsadik/nextcloud-docker.git
 cd nextcloud-docker
 ```
 
@@ -142,7 +143,11 @@ Use a reverse proxy:
 - [Caddy](https://caddyserver.com/)
 - [Traefik](https://doc.traefik.io/)
 
-I can help you add this too!
+---
+
+## 👤 Created by
+
+**MD. Taki Yasir Faraji Sadik** – [tyfsadik.org](https://tyfsadik.org)
 
 ---
 
@@ -157,3 +162,4 @@ MIT License
 - [Nextcloud Docker Image](https://hub.docker.com/_/nextcloud)
 - [MariaDB Docker Image](https://hub.docker.com/_/mariadb)
 - [Docker Compose Docs](https://docs.docker.com/compose/)
+
