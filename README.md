@@ -1,165 +1,199 @@
 # Personal_Cloud
 I don't wanna waste my money to buy some subcription for my photos and videos and documents. Like I don't wanna use any googles or icloud things. I am serious about my privacy so I make my own cloud which I can access anywhere in the world and it is super fast and actual size. 
 
-# 🚀 Nextcloud Docker Setup
+# ☁️ Self-Hosted Nextcloud with Docker and Cloudflare Tunnel
 
-A production-ready, portable, and easy-to-deploy **Nextcloud** environment using Docker and Docker Compose.
-
----
-
-## 📦 Project Overview
-
-This setup includes:
-
-- 🗂️ **Nextcloud** (v31.0.7) – self-hosted file sync and sharing platform  
-- 🐬 **MariaDB** (v10.5) – reliable database backend  
-- 🛠️ **Persistent storage** for data and configs  
-- 🔄 **Automatic container restarts**  
-- 🌐 Access via `http://localhost:8080`  
+This project allows you to self-host your own private cloud (Nextcloud) using Docker and secure it with a Cloudflare Tunnel, so it's accessible from anywhere without opening any router ports.
 
 ---
 
-## 🧰 Prerequisites
-
-Make sure you have the following installed:
-
-- [Docker Engine](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- At least **2 GB of free disk space**
-
----
-
-## 📁 Folder Structure
+## 📁 Project Structure
 
 ```
 nextcloud-docker/
-├── docker-compose.yml       # Compose file with app + db services
-├── .gitignore               # Exclude unnecessary files from Git
-└── README.md                # This documentation
+├── docker-compose.yml
+├── db/                  # MariaDB database volume
+├── nextcloud/           # Nextcloud app volume
+└── README.md
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## 🐳 Docker Setup
 
-### 1. Clone the repository
+### 1. Prerequisites
 
-```bash
-git clone https://github.com/tyfsadik/nextcloud-docker.git
-cd nextcloud-docker
+- Docker
+- Docker Compose
+- Cloudflare Account
+- A domain (e.g. `tyfsadik.org`) added to Cloudflare
+
+### 2. Docker Compose Configuration
+
+Here's the `docker-compose.yml` used:
+
+```yaml
+version: '3.7'
+
+services:
+  db:
+    image: mariadb
+    restart: always
+    container_name: nextcloud-db
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=StrongRootPass
+      - MYSQL_PASSWORD=nextcloudpass
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  app:
+    image: nextcloud
+    restart: always
+    container_name: nextcloud
+    ports:
+      - 8080:80
+    volumes:
+      - ./nextcloud:/var/www/html
+    environment:
+      - MYSQL_PASSWORD=nextcloudpass
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=db
+    depends_on:
+      - db
 ```
-
-### 2. Start the environment
-
-```bash
-docker-compose up -d
-```
-
-This will:
-
-- Pull the required images
-- Start the MariaDB and Nextcloud containers
-- Persist data in `./db` and `./nextcloud` on your host
-
-### 3. Access Nextcloud
-
-Open your browser and go to:
-
-```
-http://localhost:8080
-```
-
-Or replace `localhost` with your server’s IP or domain.
-
-### 4. Complete Web Setup
-
-Use the following details when prompted for database configuration:
-
-- **Database user**: `nextcloud`
-- **Database name**: `nextcloud`
-- **Database password**: `nextcloudpass`
-- **Database host**: `db`
-
-Then finish creating your admin account.
 
 ---
 
-## 💾 Data Persistence & Backup
-
-- 🐬 **Database** stored in: `./db`
-- 📁 **Nextcloud data/configs** stored in: `./nextcloud`
-
-✅ Back up both folders regularly to avoid data loss.
-
----
-
-## 📦 Stopping & Restarting
-
-To **stop** the containers:
-
-```bash
-docker-compose down
-```
-
-To **start** again:
+## 🚀 Running the Project
 
 ```bash
 docker-compose up -d
 ```
 
+- Visit: [http://localhost:8080](http://localhost:8080)
+- Complete the Nextcloud installation in the browser.
+
 ---
 
-## 🛠️ Troubleshooting
+## 🔁 Auto Start on Boot
 
-Check logs:
+Docker services restart automatically due to `restart: always`. To ensure Docker itself starts on boot:
 
 ```bash
-docker-compose logs -f
+sudo systemctl enable docker
 ```
 
-Enter Nextcloud container:
+---
+
+## 🗃️ Backup Strategy
+
+Since all Nextcloud files and the database are stored in mounted volumes (`./nextcloud` and `./db`), you can back them up by copying the whole folder to an external hard drive:
 
 ```bash
-docker exec -it nextcloud bash
+rsync -a --delete ~/nextcloud-docker/ /mnt/backup-drive/nextcloud-backup/
 ```
 
-Check port conflicts (port 8080 should be free).  
+To restore, copy it back and run:
+
+```bash
+docker-compose up -d
+```
 
 ---
 
-## 🔐 Security Tips
+## 🌍 Exposing Nextcloud via Cloudflare Tunnel
 
-- Change the default passwords in `docker-compose.yml` before production use.
-- Use HTTPS via a reverse proxy like **Nginx** or **Caddy**.
-- Block unused ports with a firewall.
+Use Cloudflare Tunnel to expose your Nextcloud without opening ports on your router.
 
----
+### 🔧 Requirements
 
-## 🌐 Want HTTPS?
-
-Use a reverse proxy:
-
-- [Nginx Proxy Manager](https://nginxproxymanager.com/)
-- [Caddy](https://caddyserver.com/)
-- [Traefik](https://doc.traefik.io/)
+- Cloudflared installed: [Install Instructions](https://developers.cloudflare.com/cloudflared/install/)
+- Your domain set up in Cloudflare
 
 ---
 
-## 👤 Created by
+### 🛠️ Setup Steps
 
-**MD. Taki Yasir Faraji Sadik** – [tyfsadik.org](https://tyfsadik.org)
+#### 1. Authenticate
+
+```bash
+cloudflared tunnel login
+```
+
+#### 2. Create a Tunnel
+
+```bash
+cloudflared tunnel create nextcloud-tunnel
+```
+
+#### 3. Configure the Tunnel
+
+Create a config file:
+
+```bash
+mkdir -p ~/.cloudflared
+nano ~/.cloudflared/config.yml
+```
+
+Paste:
+
+```yaml
+tunnel: nextcloud-tunnel
+credentials-file: /home/YOUR_USERNAME/.cloudflared/nextcloud-tunnel.json
+
+ingress:
+  - hostname: cloud.tyfsadik.org
+    service: http://localhost:8080
+  - service: http_status:404
+```
+
+> Replace `cloud.tyfsadik.org` with your subdomain.
+
+#### 4. Create DNS Record
+
+In Cloudflare DNS panel:
+- Type: CNAME
+- Name: `cloud`
+- Target: `nextcloud-tunnel-id.cfargotunnel.com`
+
+Or use:
+
+```bash
+cloudflared tunnel route dns nextcloud-tunnel cloud.tyfsadik.org
+```
+
+#### 5. Start the Tunnel
+
+```bash
+cloudflared tunnel run nextcloud-tunnel
+```
+
+Now visit: [https://cloud.tyfsadik.org](https://cloud.tyfsadik.org)
 
 ---
 
-## 📝 License
+### 🛡️ Run Tunnel as a Service (Optional)
 
-MIT License
+```bash
+sudo cloudflared service install
+```
+
+Tunnel will auto-start on boot.
 
 ---
 
-## 📚 References
+## ✅ Final Notes
 
-- [Nextcloud Docker Image](https://hub.docker.com/_/nextcloud)
-- [MariaDB Docker Image](https://hub.docker.com/_/mariadb)
-- [Docker Compose Docs](https://docs.docker.com/compose/)
+- Secure your instance with HTTPS via Cloudflare
+- Add storage mounts for large media if needed
+- Regularly backup `nextcloud/` and `db/` directories
+
+---
+
+**Made with ❤️ by [Your Name]**
+
 
