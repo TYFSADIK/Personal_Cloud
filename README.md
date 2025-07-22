@@ -194,6 +194,6 @@ Tunnel will auto-start on boot.
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️ by TYF Sadik**
 
 
