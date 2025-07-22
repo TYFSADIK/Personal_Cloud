@@ -26,7 +26,7 @@ nextcloud-docker/
 - Docker
 - Docker Compose
 - Cloudflare Account
-- A domain (e.g. `tyfsadik.org`) added to Cloudflare
+- A domain ( `tyfsadik.org`) added to Cloudflare
 
 ### 2. Docker Compose Configuration
 
